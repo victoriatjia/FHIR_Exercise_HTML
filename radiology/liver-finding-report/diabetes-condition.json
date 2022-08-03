@@ -1,0 +1,15 @@
+{ "resourceType": "Condition",
+  "id": "2041567",
+   "code": {
+    "coding": [ {
+      "system": "ICD10",
+      "code": "E11.9",
+      "display": "Controlled diabetes mellitus type II without complication"
+    } ],
+    "text": "Condition Code [icd-10] : E11.9 - Condition Code [snomed] : 313436004 - Condition Name : Controlled diabetes mellitus type II without complication"
+  },
+  "onsetDateTime": "2015-10-01T00:00:00",
+  "asserter": {
+    "display": ", "
+  }
+}

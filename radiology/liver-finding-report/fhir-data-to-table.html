@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+    <title></title>
+    <style type="text/css">
+        #buttonGet{
+            height: 43px;
+            width: 140px;
+        }
+        table, th, td
+		{
+			border: 1px solid black;
+		} 
+		table
+		{
+			border-collapse: collapse;
+		}
+    </style>
+	<script src="http-request.js"></script>   
+	<script src="cookie.js"></script> 
+	<script src="add-table-event.js"></script>
+	<script>
+		//Step 1. Get all Patient by Organization ID
+		HTTPGetData("http://hapi.fhir.org/baseR4/Patient?organization=2907171");
+		
+		var myObj;
+		//Step 2. Store retrieved value into "myObj"
+		function callBack() {
+			myObj= JSON.parse(ret);  
+		} 
+		
+		//Step 3. When user click "GET Patient" button, show FHIR data into table
+		function showData() {
+			var tableStr = "<tr><th>ID</th><th>Name</th><th>Gender</th><th>Birth Date</th></tr>";
+
+			for (i = 0; i <myObj.entry.length; i++)
+			{
+				var trStr = "<tr>";
+
+				trStr = trStr + "<td>";
+				trStr = trStr + myObj.entry[i].resource.id;
+				trStr = trStr + "</td>";
+
+				trStr = trStr + "<td>";
+				trStr = trStr + myObj.entry[i].resource.name[0].text;
+				trStr = trStr + "</td>";
+
+				trStr = trStr + "<td>";
+				trStr = trStr +myObj.entry[i].resource.gender;
+				trStr = trStr + "</td>";
+
+				trStr = trStr + "<td>";
+				trStr = trStr + myObj.entry[i].resource.birthDate;
+				trStr = trStr + "</td>";
+
+				trStr = trStr + "</tr>";
+				tableStr = tableStr + trStr;
+			}
+
+			document.getElementById("tablePatient").innerHTML = tableStr;
+			//Add event to table tablePatient
+			addRowHandlers("tablePatient");
+		}
+		
+		function rowClickFunction(cid) {
+			setCookie("patientID", cid, 1);
+
+			//Match clicked id with JSON data id
+			for (var i = 0; i < myObj.entry.length; i++) {
+				if (cid == myObj.entry[i].resource.id) {
+					setCookie("patientName", myObj.entry[i].resource.name[0].text, 1);
+					setCookie("gender", myObj.entry[i].resource.gender, 1);
+				}
+			}
+			window.open("exercise2-add-html-input.html");
+		}
+   </script>
+</head>
+
+<body style="height:780px">
+	<p>
+        <h3>請先按 GET patient 按鈕，再點選表格中的病人</h3> 
+        <input id="buttonGet" onclick="showData();" type="button" value="GET patient"/>
+	</p>
+	<table id ="tablePatient"></table>
+</body>
+
+</html>

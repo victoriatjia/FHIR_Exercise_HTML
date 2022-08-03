@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>CXR Reading - Ground Glass Opacity</title>
+	<script src="setting.js"></script>
+	<script src="cookie.js"></script> 
+	<script src="http-request.js"></script>
+</head>
+<body>
+	<fieldset>
+		<legend>Exercise 4: Add checkbox</legend>
+		<h2>Liver Finding Report</h2>
+		
+		Patient name: <input type="text" name="patientName" id="name"/><br/><br/>
+		FHIR Patient ID: <input type="text" id="FHIRPatientID"/><br/><br/>
+		Mass size: <input type="number" id="massSize"/> cm <br/><br/>
+		Mass shape <br/>
+		<input type="radio" name="massShape" id="irregularShaped"> Irregular<br/>
+		<input type="radio" name="massShape" id="lobularShaped"> Lobular<br/>
+		<input type="radio" name="massShape" id="ovalShaped"> Oval<br/>
+		<input type="radio" name="massShape" id="roundShaped"> Round<br/><br/>
+		
+		Mass margin <br/>
+		<input type="checkbox" name="massMargin" id="circumscribedMargin"> Circumscribed Margin<br/>
+		<input type="checkbox" name="massMargin" id="microlobulatedMargin"> Microlobulated Margin<br/>
+		<input type="checkbox" name="massMargin" id="obscuredMargin"> Obscured Margin<br/>
+		<input type="checkbox" name="massMargin" id="indistinctMargin"> Indistinct Margin<br/>
+		<input type="checkbox" name="massMargin" id="spiculatedMargin"> Spiculated Margin<br/>
+		<input type="checkbox" name="massMargin" id="otherMargin" onclick="showTextbox(this)"> Others<br/>
+		<input type="text" id="otherMarginValue" style="display:none"/>
+		
+		<br><input id="buttonPost" onclick="postData()" type="button" value="Submit Form"/>
+	</fieldset>
+</body>
+	<script>
+		var patientID, patientName;
+		
+		if(getCookie("patientID") != "")
+		{
+			patientID= getCookie("patientID");
+			patientName= getCookie("patientName");
+		}
+		else
+		{
+			patientID= "6847426";
+			patientName= "Victoria";
+		}
+		
+		document.getElementById("FHIRPatientID").value = patientID;
+		document.getElementById("name").value = patientName;
+		
+		var Observation = 
+			{
+				"resourceType": "Observation",
+				"subject": {"reference": ""},
+				"component": []
+			};
+
+		var massSize =   
+			{ 
+				"code": {
+					"coding": [{
+					  "system": "http://MISAC.org/codeSystem/massSize",
+					  "code": "mass.size",
+					  "display": "mass.size"
+					}]
+				},
+				"valueQuantity": {
+					"value": 0,
+					"unit": "cm",
+					"system": "http://unitsofmeasure.org",
+					"code": "cm"
+				}
+			};
+			
+		var massShape =     
+			{
+				"code": {
+					"coding": [{
+						"system": "http://MISAC.org/codeSystem/massShape",
+						"code": "mass.shape",
+						"display": "mass.shape"
+					}]
+				},
+				"valueCodeableConcept": {   				//存放觀察項目的代碼
+					"coding": [{
+						"system": "http://snomed.info/sct", //定義結果代碼系統的 URL 格式：表單項目/觀察項目欄位/項目欄位 (建立網址)
+						"code": "",  						//選項的值
+						"display": ""
+					}]
+				}
+			};
+
+		function postData() {
+			var subRef = "Patient/";
+			Observation.subject.reference= subRef  + document.getElementById("FHIRPatientID").value; 
+			
+			massSize.valueQuantity.value= document.getElementById("massSize").value;
+			Observation.component.push(massSize);
+			
+			if(document.getElementById("irregularShaped").checked == true)
+				{massShape.valueCodeableConcept.coding[0].code ="129736006";
+				massShape.valueCodeableConcept.coding[0].display ="Irregular shaped";  }
+			if(document.getElementById("lobularShaped").checked == true)
+				{massShape.valueCodeableConcept.coding[0].code ="129735005";
+				massShape.valueCodeableConcept.coding[0].display ="Lobular shaped";  }
+			if(document.getElementById("ovalShaped").checked == true)
+				{massShape.valueCodeableConcept.coding[0].code ="129734009";
+				massShape.valueCodeableConcept.coding[0].display ="Oval shaped" ;  }
+				
+			/*if(document.getElementById("roundShaped").checked == true)
+				{massShape.valueCodeableConcept.coding[0].code = "129733003";
+				massShape.valueCodeableConcept.coding[0].display ="Round shaped" ;  } */
+
+			Observation.component.push(massShape);
+			ret= JSON.stringify(Observation);
+			alert("FHIR Observation before upload to FHIR Server:\n\n" + ret); 
+		   
+			var apiURL= FHIRrootURL + '/' + "Observation";
+			HTTPPostData(apiURL, ret);    
+		}
+		
+		function showTextbox(obj){
+			if(obj.checked)
+			{
+				document.getElementById("otherMarginValue").style.display= "block";
+			}
+			else
+			{
+				document.getElementById("otherMarginValue").value= "";
+				document.getElementById("otherMarginValue").style.display= "none";
+			}
+		}
+	</script>
+</html>
