@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+	<title>CXR Reading - Ground Glass Opacity</title>
+	<script src="setting.js"></script>
+	<script src="cookie.js"></script> 
+	<script src="http-request.js"></script>
+</head>
+<body>
+	<fieldset>
+		<legend>Exercise 2: Add radio button</legend>
+		<h2>Liver Finding Report</h2>
+		
+		Patient name: <input type="text" name="patientName" id="name"/><br/><br/>
+		FHIR Patient ID: <input type="text" id="FHIRPatientID"/><br/><br/>
+		Mass size: <input type="number" id="massSize"/> cm <br/><br/>
+		Mass shape <br/>
+		<input type="radio" name="massShape" id="129736006" value="Irregular Shaped"> Irregular<br/>
+		<input type="radio" name="massShape" id="129735005" value="Lobular Shaped"> Lobular<br/>
+		<input type="radio" name="massShape" id="129734009" value="Oval Shaped"> Oval<br/>
+		<br><input id="buttonPost" onclick="postData()" type="button" value="Submit Form"/>
+	</fieldset>
+</body>
+	<script>
+		var patientID, patientName;
+		
+		if(getCookie("patientID") != "")
+		{
+			patientID= getCookie("patientID");
+			patientName= getCookie("patientName");
+		}
+		else
+		{
+			patientID= "6847426";
+			patientName= "Victoria";
+		}
+		
+		document.getElementById("FHIRPatientID").value = patientID;
+		document.getElementById("name").value = patientName;
+		
+		var Observation = 
+			{
+				"resourceType": "Observation",
+				"subject": {"reference": ""},
+				"component": []
+			};
+
+		var massSize =   
+			{ 
+				"code": {
+					"coding": [{
+					  "system": "http://MISAC.org/codeSystem/massSize",
+					  "code": "mass.size",
+					  "display": "mass.size"
+					}]
+				},
+				"valueQuantity": {
+					"value": 0,
+					"unit": "cm",
+					"system": "http://unitsofmeasure.org",
+					"code": "cm"
+				}
+			};
+			
+		var massShape =     
+			{
+				"code": {
+					"coding": [{
+						"system": "http://MISAC.org/codeSystem/massShape",
+						"code": "mass.shape",
+						"display": "mass.shape"
+					}]
+				},
+				"valueCodeableConcept": {   				//存放觀察項目的代碼
+					"coding": [{
+						"system": "http://snomed.info/sct", //定義結果代碼系統的 URL 		格式：表單項目/觀察項目欄位/項目欄位 (建立網址)
+						"code": "",  						//選項的值
+						"display": ""
+					}]
+				}
+			};
+
+		function postData() {
+			var subRef = "Patient/";
+			Observation.subject.reference= subRef  + document.getElementById("FHIRPatientID").value; 
+			
+			massSize.valueQuantity.value= document.getElementById("massSize").value;
+			Observation.component.push(massSize);
+			
+			var massShapeObj= document.querySelector('input[name="massShape"]:checked')
+			massShape.valueCodeableConcept.coding[0].code = massShapeObj.id;
+			massShape.valueCodeableConcept.coding[0].display = massShapeObj.value;
+			Observation.component.push(massShape);
+			
+			ret= JSON.stringify(Observation);
+			alert("FHIR Observation before upload to FHIR Server:\n\n" + ret); 
+		   
+			var apiURL= FHIRrootURL + '/' + "Observation";
+			HTTPPostData(apiURL, ret);    
+		}
+	</script>
+</html>
